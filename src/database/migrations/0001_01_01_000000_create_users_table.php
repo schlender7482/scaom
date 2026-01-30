@@ -32,11 +32,9 @@ return new class extends Migration
             $table->string('registration', 20)->unique()->nullable();
             $table->string('phone', 15)->nullable();
 
-            // Relacionamento com a tabela roles
-            // foreignId = Cria uma coluna que referencia outra tabela
-            // constrained = Cria a "foreign key" (chave estrangeira)
-            // onDelete('restrict') = Impede deletar role se tiver usuários usando
-            $table->foreignId('role_id')->constrained('roles')->onDelete('restrict');
+            // IMPORTANTE: Apenas a coluna, SEM a foreign key constraint
+            // A foreign key será adicionada em outra migration
+            $table->unsignedBigInteger('role_id')->nullable();
 
             $table->boolean('is_active')->default(true);
 

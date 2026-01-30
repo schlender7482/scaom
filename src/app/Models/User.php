@@ -12,9 +12,10 @@ use Illuminate\Notifications\Notifiable;
 | Model User
 |--------------------------------------------------------------------------
 | Representa um usuário do sistema (policial).
-| 
-| Extends Authenticatable: Isso faz o User ter recursos de autenticação
-| (login, logout, verificação de senha, etc.)
+|
+| VERIFICAÇÃO DE PERMISSÕES:
+| As permissões são verificadas através do Role do usuário.
+| Usamos métodos como $user->pode('abordados.criar')
 |
 */
 
@@ -49,27 +50,16 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_active' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_active' => 'boolean',
+    ];
 
     // ========== RELACIONAMENTOS ==========
 
     /**
-     * Relacionamento: User pertence a um Role
-     * 
-     * Inverso do hasMany. Permite fazer:
-     * $user->role->nome // Retorna "Administrador", por exemplo
+     * User pertence a um Role
      */
     public function role()
     {
@@ -87,24 +77,43 @@ class User extends Authenticatable
         return $this->hasMany(Addressed::class, 'user_insert_id');
     }
 
-     // ========== MÉTODOS AUXILIARES ==========
-    
+    // ========== MÉTODOS DE PERMISSÃO ==========
+
     /**
-     * Verifica se o usuário pode consultar abordados
+     * Verifica se o usuário tem uma permissão específica
      * 
-     * Uso: if ($user->cantConsult()) { ... }
+     * @param string $permission Nome da permissão
+     * @return bool
+     * 
+     * Uso:
+     *   if ($user->can('abordados.criar')) { ... }
+     *   if ($user->can('ocorrencias.visualizar')) { ... }
      */
-    public function cantConsult(): bool
+    public function canAcess(string $permission): bool
     {
-        return $this->role->cant_consult;
+        // Usuário inativo não pode nada
+        if (!$this->is_active) {
+            return false;
+        }
+
+        return $this->role->hasPermission($permission);
     }
 
     /**
-     * Verifica se o usuário pode cadastrar abordados
+     * Verifica se o usuário tem acesso a um módulo
+     * 
+     * @param string $modulo Nome do módulo
+     * @return bool
+     * 
+     * Uso: if ($user->canAcessModule('maria_penha')) { ... }
      */
-    public function cantInsert(): bool
+    public function canAcessModule(string $module): bool
     {
-        return $this->role->cant_insert;
+        if (!$this->is_active) {
+            return false;
+        }
+
+        return $this->role->hasAccessModule($module);
     }
 
     /**
@@ -112,6 +121,33 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role->cant_manage_users;
+        return $this->is_active && $this->role->is_admin;
+    }
+
+     /**
+     * Retorna array com todas as permissões do usuário
+     * Útil para passar para o frontend/JavaScript
+     */
+    public function allPermissions(): array
+    {
+        if (!$this->is_active) {
+            return [];
+        }
+
+        return $this->role->listPermissions();
+    }
+
+    // ========== MÉTODOS AUXILIARES ==========
+    /**
+     * Formata o CPF para exibição
+     */
+    public function getCpfFormat(): ?string
+    {
+        if (!$this->cpf) return null;
+        
+        return substr($this->cpf, 0, 3) . '.' .
+               substr($this->cpf, 3, 3) . '.' .
+               substr($this->cpf, 6, 3) . '-' .
+               substr($this->cpf, 9, 2);
     }
 }

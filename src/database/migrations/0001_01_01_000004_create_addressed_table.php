@@ -62,18 +62,11 @@ return new class extends Migration
  
             // ========== CONTROLE DO SISTEMA ==========
             
-            // Quem cadastrou este abordado
-            // Referência para a tabela users
-            // onDelete('restrict') = Não deixa deletar usuário se ele tiver cadastros
-            $table->foreignId('user_insert_id')
-                  ->constrained('users')
-                  ->onDelete('restrict');
-            
+            // IMPORTANTE: Apenas a coluna, SEM a foreign key constraint
+            // A foreign key será adicionada em outra migration
+            $table->unsignedBigInteger('user_insert_id')->nullable();
             // Quem fez a última atualização (pode ser diferente de quem cadastrou)
-            $table->foreignId('user_update_id')
-                  ->nullable()
-                  ->constrained('users')
-                  ->onDelete('restrict');
+            $table->unsignedBigInteger('user_update_id')->nullable();
             
             // Data/hora da abordagem (quando aconteceu, não quando cadastrou)
             $table->datetime('approach_date')->nullable();

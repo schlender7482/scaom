@@ -10,17 +10,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 | Model Role
 |--------------------------------------------------------------------------
 | Representa um perfil de acesso no sistema.
-| 
-| CONCEITO IMPORTANTE - RELACIONAMENTOS:
-| Um Role "tem muitos" (hasMany) Users
-| É como dizer: "Um cargo pode ter vários funcionários"
+|
+| RELACIONAMENTOS:
+| - hasMany Users → Um role tem muitos usuários
+| - belongsToMany Permissions → Um role tem muitas permissões
 |
 */
 
 class Role extends Model
 {
     use HasFactory;
-
 
     /**
      * $fillable define quais campos podem ser preenchidos em massa.
@@ -32,9 +31,8 @@ class Role extends Model
     protected $fillable = [
         'name',
         'description',
-        'cant_consult',
-        'cant_insert',
-        'cant_manage_users',
+        'is_admin',
+        'color'
     ];
 
     /**
@@ -44,19 +42,94 @@ class Role extends Model
      * Com cast, o Laravel converte para true/false automaticamente.
      */
     protected $casts = [
-        'cant_consult' => 'boolean',
-        'cant_insert' => 'boolean',
-        'cant_manage_users' => 'boolean',
+        'is_admin' => 'boolean',
     ];
 
-     /**
-     * Relacionamento: Um Role tem muitos Users
-     * 
-     * Isso permite fazer: $role->users para pegar todos 
-     * os usuários que têm esse perfil.
+    /**
+     * Um Role tem muitos Users
      */
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * Relacionamento Many-to-Many com Permission
+     * 
+     * belongsToMany indica que um Role pode ter muitas Permissions
+     * O segundo parâmetro é o nome da tabela pivot
+     */
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'role_permission');
+    }
+
+    // ========== MÉTODOS DE PERMISSÃO ==========
+
+    /**
+     * Verifica se este role tem uma permissão específica
+     * 
+     * @param string $permission Nome da permissão (ex: "abordados.criar")
+     * @return bool
+     * 
+     * Uso: $role->hasPermission('abordados.criar')
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // Admin tem todas as permissões
+        if ($this->is_admin) {
+            return true;
+        }
+        // Verifica se a permissão está vinculada a este role
+        return $this->permissions()
+                    ->where('name', $permission)
+                    ->exists();
+    }
+
+    /**
+     * Verifica se tem qualquer permissão de um módulo
+     * 
+     * @param string $module Nome do módulo (ex: "abordados")
+     * @return bool
+     * 
+     * Uso: $role->hasAccessModule('abordados')
+     */
+    public function hasAccessModule(string $module): bool
+    {
+        if ($this->is_admin) {
+            return true;
+        }
+
+        return $this->permissions()
+                    ->where('module', $module)
+                    ->exists();
+    }
+
+    /**
+     * Retorna lista de nomes das permissões deste role
+     * 
+     * Útil para passar para o JavaScript ou cache
+     */
+    public function listPermissions(): array
+    {
+        if ($this->is_admin) {
+            return ['*']; // Asterisco indica "todas"
+        }
+
+        return $this->permissions()
+                    ->pluck('name')
+                    ->toArray();
+    }
+
+     /**
+     * Sincroniza as permissões do role
+     * 
+     * @param array $permissionIds Array com IDs das permissões
+     * 
+     * Uso: $role->syncPermissions([1, 2, 3, 5])
+     */
+    public function syncPermissions(array $permissionIds): void
+    {
+        $this->permissions()->sync($permissionIds);
     }
 }

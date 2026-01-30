@@ -10,16 +10,16 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
+    // A ORDEM É IMPORTANTE!
+    // 1. Primeiro as permissões (não dependem de nada)
+    // 2. Depois os roles (que vão usar as permissões)
+    // 3. Por último os users (que precisam dos roles)
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            PermissionSeeder::class,
+            RoleSeeder::class,
+            UserSeeder::class,
         ]);
     }
 }
