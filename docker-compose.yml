@@ -31,7 +31,7 @@ services:
     environment:
       POSTGRES_DB: scaom_db
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: A@nderqw1995
+      POSTGRES_PASSWORD: #######
     ports:
       - "5432:5432"
     volumes:
@@ -45,7 +45,7 @@ services:
     container_name: scaom_pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: andersonrafaelschlender@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: A@nderqw1995
+      PGADMIN_DEFAULT_PASSWORD: #######
     ports:
       - "5050:80"
     depends_on:
