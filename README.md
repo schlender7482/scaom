@@ -9,11 +9,11 @@ docker-compose ps
 ## 3. Acessar o container PHP para instalar o Laravel
 docker-compose exec php bash
 
-## 4. Dentro do container, instalar as dependências do Composer
-composer install --no-scripts --no-interaction
-
-## 5. Ajustar permissões (ainda dentro do container)
+## 4. Ajustar permissões (ainda dentro do container)
 chmod -R 775 storage bootstrap/cache
+
+## 5. Dentro do container, instalar as dependências do Composer
+composer install --no-scripts --no-interaction
 
 ## 6. Instalação do zero exige a execução das Migrations e Seeders
 
@@ -33,4 +33,3 @@ docker-compose exec php php artisan migrate:fresh --seed
 
 Email: andersonrafaelschlender@gmail.com
 Senha: admin
-
