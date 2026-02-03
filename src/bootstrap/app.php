@@ -11,7 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        
+        // Aliases para middlewares customizados
+        // Isso permite usar 'user.active' nas rotas
+        $middleware->alias([
+            'user.active' => \App\Http\Middleware\CheckUserActive::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -1,18 +1,21 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/sass/app.scss',  // Nosso SCSS com Bootstrap
+                'resources/js/app.js',       // Nosso JavaScript
+            ],
             refresh: true,
         }),
-        tailwindcss(),
     ],
+    // Configuração para o Docker funcionar corretamente
     server: {
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
+        host: '0.0.0.0',
+        hmr: {
+            host: 'localhost',
         },
     },
 });
